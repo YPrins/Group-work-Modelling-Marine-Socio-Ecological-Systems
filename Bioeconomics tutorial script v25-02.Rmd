@@ -1,0 +1,785 @@
+---
+title: "Tutorial: Bioeconomics"
+author: ""
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: cerulean
+---
+
+<style type="text/css">
+.main-container {
+  max-width: 1300px !important;
+  margin-left: auto;
+  margin-right: auto;
+}
+.exercise-box {
+  border-left: 6px solid #2c7fb8;
+  background: #f7fbff;
+  padding: 12px 14px;
+  margin: 14px 0;
+}
+.note-box {
+  border-left: 6px solid #41ab5d;
+  background: #f7fcf5;
+  padding: 12px 14px;
+  margin: 14px 0;
+}
+</style>
+
+## 1. Introduction
+
+This tutorial treats a **bioeconomic fishery** as a **nonlinear dynamical system**, using the same modelling workflow as in Tutorials 2–3:
+
+- write an ODE system,
+- identify **nullclines** and **equilibria**,
+- simulate trajectories in time, and
+- interpret behavior in the **state plane**.
+
+We focus on an **open-access** fishery with two state variables:
+
+- $S(t)$: fish stock (biomass)
+- $E(t)$: fishing effort
+
+Later, we will define a number of parameters and derived quantities to make our bio-economic model work. To have a complete overview for you to revisit later, let's write them down here:
+
+- $H$: Harvest of the stock, depends on catchability coefficient, fishing effort, and stock biomass
+- $q$: catchability coefficient, defines how much stock is caught per unit of effort.
+- $p$: price of fish.
+- $c$: costs of fishing per unit effort. 
+- $R$: revenue, depends on price of fish and harvest.
+- $TC$: total costs, depend on the amount of fishing effort and costs per unit effort.
+- $c$: costs per unit effort.
+- $\pi$: profit, being defined as revenues minus costs.
+- $r$ intrinsic growth rate of the stock.
+- $K$ carrying capacity of the stock.
+- $A$ Allee treshold.
+
+---
+
+## 2. Model components
+
+### 2.1 Harvest and profits
+
+Harvest is assumed to be proportional to effort and stock:
+
+$$
+H = q E S,
+$$
+
+where $q$ is the **catchability coefficient**. That is to say, the fraction of the stock $S$ that is taken for each unit of effort $E$
+
+Revenues $R$ result from selling the harvest:
+
+$$
+R = pH
+$$
+where $p$ is the price. Revenues are thus simply calculated by multiplying the harvest $H$ by the price of fish $p$. Total costs for catching the fish depend on the amount of fishing effort $E$:
+$$
+TC = cE,
+$$
+where $c$ is the cost per unit effort. To make the bioeconomic model complete, we calculate profit  $\pi$ as
+
+$$
+\pi = R - TC = p(qES) - cE = (pqS - c)E.
+$$
+
+It is thus simply the revenues $R$ minus the total costs $TC$. In the equation above we substitute $R$ first by $pH$, and subsequently substitute $H$ by $qES$. Then, we can show that profit $\pi$ depends on fish price, catchability, stock size, costs, and fishing effort ( $(pqS -c)E$). 
+
+### 2.2 Open-access effort dynamics (ODE form)
+
+In an open-access fishery, we expect that a profitable fishery will attract new fishers.  Hence, open access dynamics can be modelled in continuous-time, where \theta is the adjustment parameter of the fishing fleet. 
+
+$$
+\frac{dE}{dt} = \theta \pi = \theta (pqS - c)E.
+$$
+This $\theta$ thus defines how strongly the amount of fishing effort reacts to profits made in the fishery: 
+
+The core mechanism works as follows:
+
+- If $pqS > c$, profits are positive and effort grows.
+- If $pqS < c$, profits are negative and effort declines.
+- An open-access equilibrium occurs where **profits approach zero**.
+
+> **Modelling practice**  
+> Treating fishing effort as a dynamic state variable embeds economic behavior directly into the biological system. The equation for $dE/dt$ formalizes entry and exit as profit-driven processes.
+
+---
+
+## 3. Logistic bioeconomics as a dynamical system
+
+### 3.1 A coupled bioeconomic system
+
+We can make a coupled bioeconomic system by having a population model for the stock, and combine it with the economic dynamics that we just defined. Let's assume that biological growth - the growth of stock $S$ - is logistic:
+
+$$
+\frac{dS}{dt} = rS\left(1-\frac{S}{K}\right) - H,
+\qquad
+H = qES.
+$$
+Here, $r$ is the intrinsic growth rate of the stock, and $K$ is the carrying capacity in the logistic growth model. Remember that fishing effort grows as a function of profit:
+
+$$
+\frac{dE}{dt} = \theta(pqS - c)E.
+$$
+
+So the coupled system is:
+
+$$
+\frac{dS}{dt} = rS\left(1-\frac{S}{K}\right) - qES,
+\qquad
+\frac{dE}{dt} = \theta(pqS - c)E.
+$$
+
+### 3.2 Nullclines in the $(S,E)$ plane
+
+
+> **Modelling practice**  
+> Nullclines partition the state space into regions where the direction of change of each state variable is known. Without solving the model numerically, they already reveal where equilibria exist and whether trajectories move toward or away from them.
+
+---
+
+#### Stock nullclines ($dS/dt = 0$)
+
+The stock dynamics are given by
+\[
+\frac{dS}{dt} = rS\left(1-\frac{S}{K}\right) - qES.
+\]
+
+Setting $dS/dt = 0$ yields
+\[
+0 = S\left[r\left(1-\frac{S}{K}\right) - qE\right].
+\]
+
+This implies **two stock nullclines**:
+
+1. **Extinction branch**
+\[
+S = 0
+\]
+
+2. **Interior stock nullcline** (for $S>0$)
+\[
+r\left(1-\frac{S}{K}\right) - qE = 0
+\quad\Rightarrow\quad
+E = \frac{r}{q}\left(1-\frac{S}{K}\right).
+\]
+
+> **Modelling practice**  
+> Boundary cases such as $S=0$ are not mathematical artifacts. They correspond to biologically meaningful states (here: extinction) and often control the long-run dynamics of resource systems.
+
+---
+
+#### Effort nullclines ($dE/dt = 0$)
+
+Effort evolves according to
+\[
+\frac{dE}{dt} = \theta \, (pqS - c)\,E.
+\]
+
+Setting $dE/dt = 0$ gives
+\[
+0 = \theta (pqS - c)E.
+\]
+
+This yields **two effort nullclines**:
+
+1. **No-effort branch**
+\[
+E = 0
+\]
+
+2. **Zero-profit (interior) nullcline** (for $E>0$)
+\[
+pqS - c = 0
+\quad\Rightarrow\quad
+S = \frac{c}{pq}.
+\]
+
+---
+
+#### Interior open-access equilibrium
+
+If the interior nullclines intersect at positive stock and effort, the system has an **interior open-access equilibrium** given by
+
+\[
+S^* = \frac{c}{pq},
+\qquad
+E^* = \frac{r}{q}\left(1 - \frac{S^*}{K}\right).
+\]
+
+Whether this equilibrium is stable or unstable depends on the surrounding flow in the $(S,E)$ plane, which we will examine using phase portraits.
+
+---
+
+::: {.exercise-box}
+**Exercises – Nullclines and interpretation**
+
+1. **Interpret $\frac{dE}{dt} = \theta (pqS - c)E$**  
+- What does a change in effort represent in practice? Entry of new vessels? Existing fishers increasing fishing time or intensity?
+- What does $\theta$ stand for?
+:::
+
+## 4. Plotting nullclines in R
+
+::: {.note-box}
+**If you run chunks interactively:** run chunks in order (or use *Run All*) so that the model functions are defined before simulation.
+:::
+
+```{r setup, message=FALSE, warning=FALSE}
+library(deSolve)  # ODE solver
+library(ggplot2)  # plotting
+library(dplyr)    # pipes and data manipulation
+library(tidyr)    # pivot_longer
+library(grid)     # for unit() in arrow plots
+```
+
+```{r global-opts, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+We also reuse the arrow helper from Tutorial 2.
+
+```{r helpers}
+make_arrows <- function(df, k, x, y) {
+  df %>%
+    mutate(row = row_number()) %>%
+    filter((row - 1) %% (k + 2) < 2) %>%
+    mutate(
+      xend = lead({{ x }}),
+      yend = lead({{ y }})
+    ) %>%
+    filter(row %% 2 == 1)
+}
+```
+
+```{r model-logistic}
+bioecon_logistic <- function(t, state, parms) {
+  with(as.list(c(state, parms)), {
+
+    # Numerical guard: keep states non-negative (avoids small negative drift)
+    S <- max(S, 0)
+    E <- max(E, 0)
+
+    H  <- q * E * S
+    pi <- (p * q * S - c) * E
+
+    dS <- r * S * (1 - S / K) - H
+    dE <- theta * pi
+
+    list(c(dS, dE))
+  })
+}
+```
+
+We now compute and plot these nullclines.
+
+```{r nullclines-logistic}
+# Parameter set (units are abstract; keep the same symbols as prior tutorials)
+parms_L <- c(r = 1.5, K = 100, q = 0.007, p = 1, c = 0.5, theta = 0.02)
+
+# Grids for plotting
+S_grid <- seq(0, parms_L["K"], length.out = 500)
+
+# Nullclines
+E_null_S <- (parms_L["r"]/parms_L["q"]) * (1 - S_grid/parms_L["K"])  # dS=0, S>0 branch
+S_null_E <- parms_L["c"]/(parms_L["p"]*parms_L["q"])                # dE=0, E>0 branch
+
+df_null <- data.frame(S = S_grid, E = E_null_S)
+
+ggplot(df_null, aes(x = S, y = E)) +
+  # dS/dt = 0 interior branch
+  geom_line(linewidth = 1, linetype = "dashed") +
+  # dS/dt = 0 extinction branch
+  geom_vline(xintercept = 0, linetype = "dotted", linewidth = 1) +
+  # dE/dt = 0 interior branch: S = c/(pq)
+  geom_vline(xintercept = S_null_E, linetype = "dashed", linewidth = 1) +
+  # dE/dt = 0 boundary branch: E = 0
+  geom_hline(yintercept = 0, linetype = "dotted", linewidth = 1) +
+  labs(title = "Nullclines in the (S, E) plane (Logistic)",
+       x = "Stock (S)", y = "Effort (E)") +
+  coord_cartesian(xlim = c(0, parms_L["K"])) +
+  theme_minimal()
+```
+
+### 4.1 Direction of change in the $(S,E)$ plane
+
+Once the nullclines are known, we can determine the **direction of motion** in each region of the $(S,E)$ plane.This qualitative analysis tells us how trajectories move **without solving the model**, simply by asking which processes dominate locally.
+
+---
+
+#### Direction of stock change ($dS/dt$)
+
+Recall
+\[
+\frac{dS}{dt} = S\left[r\left(1-\frac{S}{K}\right) - qE\right].
+\]
+
+This expression has a clear interpretation:  
+for $S>0$, stock change is determined by **biological growth minus harvest pressure**.
+
+- $r\left(1-\frac{S}{K}\right)$ is biological growth per-capita (per unit of biomass),
+- $qE$ is per-capita harvest pressure.
+
+The stock nullcline is the curve where these two effects exactly balance.
+
+For $S>0$, the sign of $dS/dt$ depends on the term in brackets:
+
+- **Below the stock nullcline**
+\[
+E < \frac{r}{q}\left(1-\frac{S}{K}\right)
+\quad\Rightarrow\quad
+\frac{dS}{dt} > 0
+\]
+
+Harvest pressure is weaker than biological growth.  
+**Intuition:** fish reproduce faster than they are removed, so stock increases.
+
+- **Above the stock nullcline**
+\[
+E > \frac{r}{q}\left(1-\frac{S}{K}\right)
+\quad\Rightarrow\quad
+\frac{dS}{dt} < 0
+\]
+
+Harvest pressure dominates growth.  
+**Intuition:** fish are removed faster than they reproduce, so stock declines.
+
+On the boundary $S=0$, stock remains zero: without fish, neither growth nor harvest is possible.
+
+---
+
+#### Direction of effort change ($dE/dt$)
+
+Recall
+\[
+\frac{dE}{dt} = \theta (pqS - c)E.
+\]
+
+For $E>0$, effort change depends entirely on **profitability**:
+
+- $pqS$ represents revenue per unit effort,
+- $c$ represents cost per unit effort.
+
+The effort nullcline marks where profits are exactly zero.
+
+- **To the right of the effort nullcline**
+\[
+S > \frac{c}{pq}
+\quad\Rightarrow\quad
+\frac{dE}{dt} > 0
+\]
+
+Profits are positive.  
+**Intuition:** fishing is attractive, so effort expands (entry, longer fishing time, or more vessels).
+
+- **To the left of the effort nullcline**
+\[
+S < \frac{c}{pq}
+\quad\Rightarrow\quad
+\frac{dE}{dt} < 0
+\]
+
+Profits are negative.  
+**Intuition:** fishing is unattractive, so effort contracts.
+
+On the boundary $E=0$, effort remains zero by definition.
+
+---
+
+#### Combining directions: qualitative phase portrait
+
+
+
+Arrows drawn in each region indicate the **local direction of motion**.  Equilibria occur where **both arrows vanish**, i.e. at intersections of nullclines.
+
+This graphical reasoning allows us to anticipate long-run outcomes before simulating trajectories.
+
+::: {.exercise-box}
+**Exercises – Nullclines, direction of change, and stability**
+
+Work through the following steps using pen and paper before running any simulations.
+
+1. **Draw the nullclines**  
+   - Sketch the $(S,E)$ plane.
+   - Draw the stock nullcline ($dS/dt=0$), including both the interior branch and the boundary $S=0$.
+   - Draw the effort nullcline ($dE/dt=0$), including both the interior branch and the boundary $E=0$.
+
+2. **Add direction arrows**  
+   For each region created by the nullclines:
+   - Determine the sign of $dS/dt$ and indicate whether stock increases or decreases.
+   - Determine the sign of $dE/dt$ and indicate whether effort increases or decreases.
+   - Combine these to draw a direction arrow showing the local movement of the system.
+
+3. **Identify equilibria and their stability**  
+   - Locate all equilibria (intersections of nullclines, including boundary equilibria).
+   - For each equilibrium, determine whether it is locally stable or unstable in the $S$ direction and in the $E$ direction.
+   - Which equilibria are fully stable? Which are unstable?
+
+:::
+
+### 4.2 Simulating trajectories from different initial conditions
+
+We now simulate the ODE system for multiple starting conditions, and plot the time series for $S(t)$ and $E(t)$ for different initial conditions (a depleted stock and a healthy stock).
+
+```{r simulate-logistic}
+times <- seq(0, 100, by = 0.1)
+
+# A small set of initial conditions (extend in class)
+inits <- list(
+  c(S = 30,  E = 50),
+  c(S = 30,  E = 5)
+)
+
+outs <- lapply(seq_along(inits), function(i) {
+  out <- ode(y = inits[[i]],
+             times = times,
+             func = bioecon_logistic,
+             parms = parms_L)
+  out <- as.data.frame(out)
+  out$ic <- paste0("S0=", inits[[i]]["S"], ", E0=", inits[[i]]["E"])
+  out
+})
+
+traj_L <- bind_rows(outs)
+
+traj_L_long <- traj_L %>%
+  pivot_longer(cols = c("S","E"), names_to = "var", values_to = "val")
+
+ggplot(traj_L_long, aes(x = time, y = val, color = ic)) +
+  geom_line() +
+  facet_wrap(~var, scales = "free_y", ncol = 1) +
+  theme_minimal() +
+  labs(title = "Open access trajectories (Logistic)", y = "Size", x = "Time", color = "Initial condition")
+```
+
+::: {.exercise-box}
+**Exercises – initial conditions, parameters, and intuition**
+
+1. **Initial conditions (state dependence)**  
+   Starting from the baseline run, change one thing at a time:
+   - Increase $S(0)$ (healthier stock) and decrease $S(0)$ (depleted stock).
+      Describe how these changes affect the *short-run dynamics* and the *long-run outcome*.
+
+2. **Economic parameters (profits and effort dynamics)**  
+   Keeping ecological parameters fixed, vary:
+   - price $p$,
+   - cost $c$.  
+   How do these parameters affect:
+   - the direction of effort change,
+   - the long-run effort level,
+   - the long-run stock level?
+
+3. **Ecological parameters (biological dynamics)**  
+   Keeping economic parameters fixed, vary:
+   - intrinsic growth rate $r$,
+   - carrying capacity $K$.  
+   How do these changes affect recovery speed and equilibrium stock size?
+
+4. **Real-world intuition**  
+   Give concrete real-world examples that could plausibly motivate changes in:
+   - $r$ (e.g. recruitment, climate effects),
+   - $K$ (e.g. habitat degradation or restoration),
+   - $q$ (e.g. technological change, regulation, information).  
+   Discuss whether these changes act gradually or abruptly in real fisheries.
+:::
+
+## 5. Introducing an Allee effect 
+
+In Tutorial 3, bistability arises because growth becomes negative at low state values (an Allee effect). We now introduce the same mechanism for fish stock.
+
+### 5.1 Allee growth term for fish stock
+
+We replace logistic growth by:
+
+$$
+\frac{dS}{dt} = rS\left(1-\frac{S}{K}\right)\left(\frac{S}{A}-1\right) - qES.
+$$
+
+Here $A$ is an **Allee threshold**: if $S<A$, per-capita growth is negative (in the absence of harvest).
+
+Effort dynamics remain open access:
+
+$$
+\frac{dE}{dt} = \theta(pqS - c)E.
+$$
+
+So the coupled system is:
+
+$$
+\frac{dS}{dt} = rS\left(1-\frac{S}{K}\right)\left(\frac{S}{A}-1\right) - qES,
+\qquad
+\frac{dE}{dt} = \theta(pqS - c)E.
+$$
+
+```{r model-allee}
+bioecon_allee <- function(t, state, parms) {
+  with(as.list(c(state, parms)), {
+
+    # Numerical guard: keep states non-negative (avoids small negative drift)
+    S <- max(S, 0)
+    E <- max(E, 0)
+
+    H  <- q * E * S
+    pi <- (p * q * S - c) * E
+
+    dS <- r * S * (1 - S / K) * (S / A - 1) - H
+    dE <- theta * pi
+
+    list(c(dS, dE))
+  })
+}
+```
+
+### 5.2 Allee nullclines 
+
+The effort nullcline does **not** change:
+
+$$
+S = \frac{c}{pq}.
+$$
+
+But the stock nullcline does. For $S>0$:
+
+$$
+r\left(1-\frac{S}{K}\right)\left(\frac{S}{A}-1\right) - qE = 0
+\quad\Rightarrow\quad
+E = \frac{r}{q}\left(1-\frac{S}{K}\right)\left(\frac{S}{A}-1\right).
+$$
+
+This expression can be negative for some $S$, meaning the biologically relevant part is where $E \ge 0$. That alone can create qualitatively different behavior.
+
+```{r nullclines-allee-interior, message=FALSE, warning=FALSE}
+# Parameters (Allee threshold inside (0, K))
+parms_A <- c(r = 1.5, K = 100, A = 20, q = 0.007, p = 1, c = 0.5, theta = 0.1)
+
+# Grid for stock (avoid S=0 since we focus on interior nullclines)
+S_grid <- seq(1e-6, parms_A["K"], length.out = 800)
+
+# Interior nullcline: dS/dt = 0 for S>0
+# E = (r/q) (1 - S/K) (S/A - 1)
+E_null_S <- (parms_A["r"]/parms_A["q"]) *
+  (1 - S_grid/parms_A["K"]) *
+  (S_grid/parms_A["A"] - 1)
+
+df_null <- data.frame(S = S_grid, E = E_null_S)
+
+# Interior nullcline: dE/dt = 0 for E>0  ->  S = c/(pq)
+S_null_E <- as.numeric(parms_A["c"]/(parms_A["p"]*parms_A["q"]))
+
+# Plot only the interior nullclines
+ggplot(df_null, aes(x = S, y = E)) +
+  geom_line(linewidth = 1, linetype = "dashed") +                 # dS/dt=0 (interior)
+  geom_vline(xintercept = S_null_E, linetype = "dashed") +        # dE/dt=0 (interior)
+  coord_cartesian(ylim = c(0, max(0, max(E_null_S, na.rm = TRUE)))) +
+  labs(
+    title = "Interior nullclines in the (S, E) plane (Allee effect)",
+    subtitle = "Only interior branches are shown: S>0 and E>0",
+    x = "Stock (S)", y = "Effort (E)"
+  ) +
+  theme_minimal()
+```
+
+::: {.exercise-box}
+**Exercises – Allee effect: nullclines, direction arrows, stability**
+
+Work on paper before running simulations.
+
+1. **Plot all nullclines** in the $(S,E)$ plane. Include both interior and boundary branches:
+   - Stock nullclines ($dS/dt=0$):  
+     \[
+     S=0
+     \quad\text{and}\quad
+     E=\frac{r}{q}\left(1-\frac{S}{K}\right)\left(\frac{S}{A}-1\right)\;\; (S>0)
+     \]
+   - Effort nullclines ($dE/dt=0$):  
+     \[
+     E=0
+     \quad\text{and}\quad
+     S=\frac{c}{pq}\;\; (E>0)
+     \]
+
+2. **Add direction arrows** in each region created by the nullclines.
+   - Determine the sign of $dS/dt$ (stock increasing or decreasing).
+   - Determine the sign of $dE/dt$ (effort increasing or decreasing).
+   - Combine these to sketch the local direction of motion.
+
+3. **Identify equilibria and classify stability.**
+   - Mark all equilibria (all intersections of nullclines, including boundary equilibria).
+   - For each equilibrium, decide whether it is locally **stable** or **unstable**
+
+:::
+
+### 5.3 Simulate trajectories (same initial conditions)
+
+```{r simulate-allee}
+times <- seq(0, 2000, by = 0.1)
+
+inits <- list(
+  c(S = 70,  E = 50),
+  c(S = 70,  E = 5)
+)
+
+outs_A <- lapply(seq_along(inits), function(i) {
+  out <- ode(y = inits[[i]],
+             times = times,
+             func = bioecon_allee,
+             parms = parms_A)
+  out <- as.data.frame(out)
+  out$ic <- paste0("S0=", inits[[i]]["S"], ", E0=", inits[[i]]["E"])
+  out
+})
+
+traj_A <- bind_rows(outs_A)
+
+traj_A_long <- traj_A %>%
+  pivot_longer(cols = c("S","E"), names_to = "var", values_to = "val")
+
+ggplot(traj_A_long, aes(x = time, y = val, color = ic)) +
+  geom_line() +
+  facet_wrap(~var, scales = "free_y", ncol = 1) +
+  theme_minimal() +
+  labs(title = "Open access trajectories (Allee)", y = "Size", x = "Time",color= "Initial condition")
+```
+
+::: {.exercise-box}
+**Exercises – Collapse **
+
+1. Change the initial conditions of the stock and explore at which initial biomass level the stock collapses. 
+  
+:::
+
+
+## 6. Social–ecological complexity: cooperation, defection, and fish stocks
+
+So far, effort was treated as a single continuous variable. Real fisheries often involve **heterogeneous users** with different strategies and **social feedbacks**.
+
+In this final exercise, a community of fixed size \(N\) exploits a fish stock \(S(t)\). Individuals are either:
+
+- **Cooperators** \(C(t)\): fish with *lower* effort \(e_c\)
+- **Defectors** \(D(t)=N-C(t)\): fish with *higher* effort \(e_d\)
+
+Now effort is determined by the composition of the community.
+
+### 6.1 Social–ecological model
+
+**Resource dynamics (logistic growth with harvest by both groups):**
+\[
+\frac{dS}{dt}
+=
+rS\left(1-\frac{S}{K}\right)
+-
+e_d (N-C)S
+-
+e_c CS.
+\]
+
+**Social dynamics (cooperation vs defection):**
+\[
+\frac{dC}{dt}
+=
+aC(N-C)
+-
+Cb\left(\frac{e_d}{e_c}\right).
+\]
+
+Interpretation:
+
+- \(aC(N-C)\) is **social pressure ** – cooperators persuade defectors (stronger if many cooperators and many defectors are present).
+- \(Cb(e_d/e_c)\) is **temptation to defect** – cooperation is eroded when defection is attractive (here scaled by the relative payoff proxy \(e_d/e_c\)).
+
+We will study the coupled system in \((C,S)\) space.
+
+
+
+### 6.2 R implementation (ODE simulation and phase portrait)
+```{r social-ecological-model, message=FALSE, warning=FALSE}
+library(deSolve)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(grid)
+
+# Social–ecological model: (C, S) system
+# State variables:
+#   C = number of cooperators
+#   S = stock biomass
+#
+# Parameters:
+#   N = community size (constant), D = N - C
+#   ec, ed = effort levels of cooperators/defectors
+#   r, K = logistic growth parameters
+#   a = social pressure (conversion of defectors by cooperators)
+#   b = temptation to defect (erodes cooperation)
+
+ses_fishery <- function(t, state, parms) {
+  with(as.list(c(state, parms)), {
+
+    # Guards: keep within meaningful bounds (prevents numerical drift)
+    C <- min(max(C, 0), N)
+    S <- max(S, 0)
+
+    D <- N - C
+
+    # Ecological dynamics (logistic growth minus harvest by both groups)
+    dS <- r * S * (1 - S / K) - ed * D * S - ec * C * S
+
+    # Social dynamics (norm enforcement - temptation to defect)
+    dC <- a * C * (N - C) - C * b * (ed / ec)
+
+    list(c(dC, dS))
+  })
+}
+
+# Baseline parameters (from the exercise statement)
+parms_ses <- c(
+  a = 0.001,
+  b = 0.01,
+  r = 1.5,
+  ec = 0.002,
+  ed = 0.004,
+  N = 100,
+  K = 100
+)
+
+# Initial conditions
+state0_ses <- c(C = 50, S = 50)
+
+# Time grid
+times <- seq(0, 500, by = 0.1)
+
+# Simulate
+out_ses <- ode(y = state0_ses, times = times, func = ses_fishery, parms = parms_ses)
+df_ses  <- as.data.frame(out_ses)
+
+# Time series plot
+df_long <- df_ses %>%
+  pivot_longer(cols = c("C", "S"), names_to = "var", values_to = "val")
+
+ggplot(df_long, aes(x = time, y = val, color = var)) +
+  geom_line() +
+  theme_minimal() +
+  labs(title = "Social–ecological system: cooperators and fish stock",
+       x = "Time", y = NULL)
+
+```
+
+
+::: {.exercise-box}
+**Exercises – social–ecological feedbacks**
+
+
+1. **Strength of social pressure.**  
+   Increase \(a\) step-by-step (for example: 0.0005, 0.001, 0.002, 0.005).  
+   When does cooperation persist? Is there a threshold behavior?
+
+2. **Interpretation:** In the equation for $\frac{dC}{dt}$ what does the term \(aC(N-C)\) represent socially? What does the term \(Cb(e_d/e_c)\) represent?
+
+:::
+
+
+
+
+
+
