@@ -35,23 +35,23 @@ SES_group_12 <- function(t, state, parms) {
 # -----------------------
 parms_SES12 <- c(
   r     = 1.2,
-  K     = 1000,
-  q     = 0.001,
-  P     = 1,
-  C     = 0.2,
+  K     = 4500000,
+  q     = 0.00025,
+  P     = 333,
+  C     = 2.5,
   gamma = 0.01,
   alpha = 0.0005,
-  Na    = 200
+  Na    = 850
 )
 
 # Initial conditions
 state0_SES12 <- c(
-  Nw = 600,
-  E  = 50
+  Nw = 1800000,
+  E  = 70
 )
 
 # Time grid
-times <- seq(0, 200, by = 0.1)
+times <- seq(0, 5, by = 0.1)
 
 # Simulate
 out_SES12 <- ode(y = state0_SES12,
@@ -71,8 +71,7 @@ df_long_SES12 <- df_SES12 %>%
 ggplot(df_long_SES12, aes(x = time, y = value, color = var)) +
   geom_line() +
   theme_minimal() +
-  labs(title = "SES group 12: Wild stock dynamics with aquaculture impact",
+  labs(title =  "stock dynamics with aquaculture impact",
        x = "Time",
        y = NULL,
        color = "Variable")
-```
