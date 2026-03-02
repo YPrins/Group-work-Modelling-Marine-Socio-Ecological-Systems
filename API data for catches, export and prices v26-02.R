@@ -275,12 +275,43 @@ facet_graph <- ggplot(combined_long, aes(x = Year, y = Value)) +
   )
 plot(facet_graph)
 # -----------------------------
-# 7) Statistical Analysis??
+# 7) Statistical Analysis for relation price and export
 # -----------------------------
-lm(`Average price per kg farmed salmon (NOK)` ~ 
-     `Exported farmed salmon (kg)` + 
-     `Caught salmon (kg)`, 
-   data = combined_datasets)
+# Prepare dataset
+prices_stat <- allprices %>%
+ rename(
+ commodity   = `commodity group`,
+ Description  = contents,
+ Price       = value
+ ) %>%
+     
+# Keep only price observations
+filter(Description == "Price per kilo (NOK)") 
 
+# Keep relevant columns and rename
+price_df <- prices_stat %>%
+  select(week, Price) %>%
+  rename(price_nok_per_kg = Price)
 
+volume_df <- allfarmed %>%
+  select(week, value) %>%
+  rename(tonnes = value)
 
+# Convert tonnes to kilograms
+volume_df <- volume_df %>%
+  mutate(export_kg = tonnes * 1000)
+
+# Merge the data into one dataset
+df <- merge(price_df, volume_df[, c("week", "export_kg")], by = "week")
+
+# Run a regression. Based on previous graphs, we expect a linear relationship (and thus a linear model).
+model <- lm(export_kg ~ price_nok_per_kg, data = df)
+
+# Look at the fit of the model
+summary(model)
+
+# The found values for parameters are highly significant. The R-squared is poor however.
+# The estimate for beta equals 81150, which means that for every 1 NOK increase, the amount 
+# of salmon produced extra equals 81.150 kg. 
+# Print value of beta.
+beta <- coef(model)["price_nok_per_kg"]
