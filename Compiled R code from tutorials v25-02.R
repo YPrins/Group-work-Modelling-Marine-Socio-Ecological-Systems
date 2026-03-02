@@ -7,6 +7,9 @@ library(rootSolve)
 library(tidyr)
 library(dplyr)
 library(grid)
+library(httr)
+library(jsonlite)
+library(tidyverse)
 
 
 #### write a R function for the RK4 method (Numerical solver for non-linear models)
@@ -105,3 +108,114 @@ ggplot(out_fi_df, aes(x = time, y = Numbers, color = State_variable)) +
   geom_line() + 
   labs(title = "Two types of fisheries competing", y="Numbers (hundreds)") + 
   theme_minimal()
+
+#### Biomass modelling (tutorial 6)
+F_BiomassGrowth <-
+  function(S) {
+    S + growthRate*S*(1-S/maximumStock)*
+      rlnorm(numDraws, meanlog = 0, sdlog = standardDeviation)
+  }
+
+growthRate         <- 0.1
+maximumStock       <- 100
+standardDeviation  <- 1
+
+#### Entry-exit model
+catchRate          <- 0.1
+targetMortality    <- 0.05
+targetEscapement   <- 50
+fishPrice          <- 1
+costsOfFishing     <- 3
+fixedCatch         <- 3 
+maxFractionCaught  <- 0.9
+entryExitParm      <- 0.1
+
+F_HCR_morty  <- function(B) {
+  Q        <- B*targetMortality
+  return(Q)
+}
+
+F_HCR_escap  <- function(B) {
+  Q        <- B-targetEscapement
+  Q[Q<0] <- 0
+  return(Q)
+}
+
+F_catch <-
+  function(B,E) {
+    B*(1-exp(-catchRate*E))
+  }
+
+F_reverseCatch <-
+  function(B,C) {
+    log(B/(B-C))/catchRate
+  }
+
+F_Rents <-
+  function(C,E) {
+    fishPrice*C-costsOfFishing*E
+  }
+
+F_FLT_constCatch <-
+  function(B,Q){
+    out_catch                                <- rep(fixedCatch,times=length(Q))
+    out_catch[out_catch>Q]                   <- Q[out_catch>Q]
+    out_catch[out_catch>maxFractionCaught*B] <- maxFractionCaught*B[out_catch>maxFractionCaught*B]
+    out_effort                               <- F_reverseCatch(B,out_catch)
+    return(list(effort=out_effort,catch=out_catch))
+  }
+
+F_FLT_entryExit <-
+  function(B,E,R,Q) {
+    out_effort               <- E+entryExitParm*R
+    out_effort[out_effort<0] <- 0
+    out_catch                <- F_catch(B,out_effort)
+    out_catch[out_catch > Q] <- Q[out_catch > Q]
+    out_effort               <- F_reverseCatch(B,out_catch)
+    return(list(effort=out_effort,catch=out_catch))
+  }
+
+biomass    <- array(dim=c(numYears,numDraws))
+escapement <- array(dim=c(numYears,numDraws))
+effort     <- array(dim=c(numYears,numDraws))
+TAC        <- array(dim=c(numYears,numDraws))
+catch      <- array(dim=c(numYears,numDraws))
+rents      <- array(dim=c(numYears,numDraws))
+
+initEscapement <- 50
+escapement[1,] <- initEscapement
+effort[1,]     <- fixedEffort
+catch[1,]      <- F_FLT_constEffrt(initEscapement,Inf)$catch
+rents[1,]      <- F_Rents(catch[1,],effort[1,])
+
+for(iYear in 2:numYears) {
+  biomass[iYear,]    <- F_BiomassGrowth(escapement[iYear-1,])
+  TAC[iYear,]        <- Inf
+  temp               <- F_FLT_constEffrt(biomass[iYear,],TAC[iYear,])
+  catch[iYear,]      <- temp$catch 
+  effort[iYear,]     <- temp$effort
+  rents[iYear,]      <- F_Rents(catch[iYear,],effort[iYear,])
+  escapement[iYear,] <- biomass[iYear,]-catch[iYear,]
+}
+
+plotQuants <- function(inpMatrix,name) {
+  distrMatrix <-
+    apply(inpMatrix, 1, quantile, probs = c(0.05, 0.5, 0.95),
+          na.rm = TRUE)
+  plot(distrMatrix[2,],type="l",
+       ylim=c(min(0,min(distrMatrix)),max(distrMatrix)),
+       xlab="Time step",ylab=name)
+  title(main=name)
+  polygon(c(1:dim(distrMatrix)[2],rev(1:dim(distrMatrix)[2])),
+          c(distrMatrix[3,],rev(distrMatrix[1,])),col = "grey75", border = FALSE)
+  lines(distrMatrix[2,])
+  lines(inpMatrix[,1],col="red")
+}
+
+plotQuants(rents[-1,],"Figure 4.1: Rents")
+plotQuants(effort[-1,],"Figure 4.2: Effort")
+plotQuants(catch[-1,],"Figure 4.3: Catch")
+plotQuants(biomass[-1,],"Figure 4.4: Biomass")
+meanRents   <- round(mean(rents[numYears,]),3)
+meanBiomass <- round(mean(round(biomass[numYears,]),3))
+meanCatch   <- round(mean(catch[numYears,])/mean(biomass[numYears,]),3)
