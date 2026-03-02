@@ -3,7 +3,7 @@ library(deSolve)
 library(ggplot2)
 library(dplyr)
 library(tidyr)
-install.packages("deSolve")   # only if not installed yet
+# install.packages("deSolve")   # only if not installed yet
 # SES group 12
 # Wild stock + fishing effort
 # Logistic growth + harvest + aquaculture impact
@@ -23,8 +23,8 @@ SES_group_12 <- function(t, state, parms) {
     dNw <- r * Nw * (1 - Nw / K) - H - alpha * Na * Nw
     
     # Profit-driven effort dynamics
-    profit <- P * q * E * Nw - C * E
-    dE     <- gamma * profit
+   # profit <- P * q * E * Nw - C * E
+    dE     <- gamma * E * ( P * q * Nw - C )  # changed the equation by factoring out E
     
     list(c(dNw, dE))
   })
@@ -34,24 +34,25 @@ SES_group_12 <- function(t, state, parms) {
 # Parameters
 # -----------------------
 parms_SES12 <- c(
-  r     = 1.2,
-  K     = 4500000,
-  q     = 0.00025,
-  P     = 333,
-  C     = 2.5,
-  gamma = 0.01,
-  alpha = 0.0005,
-  Na    = 850
+  r     = 1.2,        # given in (1/year)
+  K     = 4500000,    # given in Kg of salmon biomass(assuming each salmon weights 4.5kg) 
+  q     = 0.0025,     # given in percentage of stock removed per E (in fishing days) -> (1/day)
+  P     = 74,         # given in NOK per kg
+  C     = 126428,     # given in NOK per fishing day
+  gamma = 1e-8,       # attraction/effort responsiveness coefficient 
+  alpha = 5e-10,      # aquaculture impact coefficient (had to be lowered immensely from 0.0005 to this. 
+                           # BC 0.0005*5000000=2500 as a mortality term w only 1.2(1-0.4)=0.72 growth) 
+  Na    = 5000000     # aquaculture stocks given in kg 
 )
 
 # Initial conditions
 state0_SES12 <- c(
-  Nw = 1800000,
-  E  = 70
+  Nw = 1800000,       # wild stock biomass in kg
+  E  = 70             # fishing effort in fishing days
 )
 
 # Time grid
-times <- seq(0, 5, by = 0.1)
+times <- seq(0, 70, by = 0.1)
 
 # Simulate
 out_SES12 <- ode(y = state0_SES12,
