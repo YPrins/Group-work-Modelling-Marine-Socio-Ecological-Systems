@@ -5,7 +5,6 @@
 #Supervisor: Andries Richter
 #Lara Jungmann, Leonie Deurinck & Ymar Prins
 #Group 12
-
 #-------------------------------------------------------------
 # Install libraries if necessary, otherwise load the libraries
 #-------------------------------------------------------------
