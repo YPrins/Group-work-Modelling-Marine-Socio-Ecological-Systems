@@ -1,3 +1,14 @@
+#Socio-ecological system for modelling the dynamics of Norwegian Atlantic salmon,
+#under influence of aquacultural impacts exacerbated by price levels. 
+#Course: Modelling Marine Socio-Ecological Systems
+#Wageningen University and Research
+#Supervisor: Andries Richter
+#Lara Jungmann, Leonie Deurinck & Ymar Prins
+#Group 12
+
+#-------------------------------------------------------------
+# Install libraries if necessary, otherwise load the libraries
+#-------------------------------------------------------------
 library(ggplot2)
 library(dplyr)
 library(tidyr)
@@ -106,9 +117,9 @@ highAlpha <- simulateFisheries(P_baseline,
 # Combine all scenarios
 results <- bind_rows(Baseline, highPrice, lowPrice, highAlpha)
 
-# -----------------------------
+# ------------------
 # 4.Plot the results
-# -----------------------------
+# ------------------
 
 # Wild Stock
 ggplot(results, aes(x=Year, y=WildStock, color=Scenario)) +
